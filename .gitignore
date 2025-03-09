@@ -1,0 +1,21 @@
+node_modules/
+.idea/
+dist/
+build/
+.next/
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+*.egg-info/
+pip-wheel-metadata/
+
+# misc
+.DS_Store
+*.env
+*.bak
