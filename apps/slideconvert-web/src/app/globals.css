@@ -29,6 +29,16 @@
     --chart-4: 172.71 74.83% 28.04%;
     --chart-5: 217 90% 15%;
     --radius: 0.75rem;
+
+    /* Aurora effect variables */
+    --white: white;
+    --black: black;
+    --transparent: transparent;
+    --blue-300: #93c5fd;
+    --blue-400: #60a5fa;
+    --blue-500: #3b82f6;
+    --indigo-300: #a5b4fc;
+    --violet-200: #ddd6fe;
   }
   .dark {
     --background: 217 39% 3%;
