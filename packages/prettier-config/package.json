@@ -1,0 +1,5 @@
+{
+  "name": "@slideconvert/prettier-config",
+  "main": "index.json",
+  "private": true
+}
