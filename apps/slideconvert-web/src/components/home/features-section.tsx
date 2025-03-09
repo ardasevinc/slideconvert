@@ -12,7 +12,6 @@ export function FeaturesSection() {
       description: 'Convert in seconds',
       iconBgClass: 'bg-blue-100 dark:bg-blue-900',
       iconColorClass: 'text-blue-600 dark:text-blue-300',
-      delay: 0.3,
     },
     {
       icon: Lock,
@@ -20,7 +19,6 @@ export function FeaturesSection() {
       description: 'Your data is safe',
       iconBgClass: 'bg-green-100 dark:bg-green-900',
       iconColorClass: 'text-green-600 dark:text-green-300',
-      delay: 0.4,
     },
     {
       icon: Download,
@@ -28,7 +26,6 @@ export function FeaturesSection() {
       description: 'Perfect conversion',
       iconBgClass: 'bg-purple-100 dark:bg-purple-900',
       iconColorClass: 'text-purple-600 dark:text-purple-300',
-      delay: 0.5,
     },
     {
       icon: Globe,
@@ -36,7 +33,6 @@ export function FeaturesSection() {
       description: 'Works in browser',
       iconBgClass: 'bg-orange-100 dark:bg-orange-900',
       iconColorClass: 'text-orange-600 dark:text-orange-300',
-      delay: 0.6,
     },
   ];
 
@@ -50,7 +46,6 @@ export function FeaturesSection() {
           description={feature.description}
           iconBgClass={feature.iconBgClass}
           iconColorClass={feature.iconColorClass}
-          delay={feature.delay}
         />
       ))}
     </div>

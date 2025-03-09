@@ -19,7 +19,7 @@ export function FeatureCard({
   description,
   iconBgClass,
   iconColorClass,
-  delay = 0.3,
+  delay = 0,
 }: FeatureCardProps) {
   return (
     <motion.div
@@ -30,7 +30,7 @@ export function FeatureCard({
       }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.5 }}
+      transition={{ delay, duration: 0.25 }}
     >
       <div className={`p-2 rounded-full ${iconBgClass} mb-3`}>
         <Icon className={`h-6 w-6 ${iconColorClass}`} />
