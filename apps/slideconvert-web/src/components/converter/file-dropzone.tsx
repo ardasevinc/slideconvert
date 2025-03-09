@@ -1,105 +1,181 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Upload } from 'lucide-react';
-import { Button } from '@/components/ui';
+import * as React from 'react';
+import { FileText, Upload, X } from 'lucide-react';
+import Dropzone, { type FileRejection } from 'react-dropzone';
+import { toast } from 'sonner';
 
-export function FileDropzone() {
-  const [isDragging, setIsDragging] = useState(false);
+import { cn, formatBytes } from '@/lib/utils';
+import { Button, Progress } from '@/components/ui';
 
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
+interface FileDropzoneProps extends React.HTMLAttributes<HTMLDivElement> {
+  onFilesAccepted?: (files: File[]) => void;
+  onUpload?: (files: File[]) => Promise<void>;
+  maxSize?: number;
+  progress?: number;
+  disabled?: boolean;
+}
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
+export function FileDropzone({
+  onFilesAccepted,
+  onUpload,
+  maxSize = 52428800, // 50MB in bytes
+  progress,
+  disabled = false,
+  className,
+  ...props
+}: FileDropzoneProps) {
+  const [files, setFiles] = React.useState<File[]>([]);
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
+  const onDrop = React.useCallback(
+    (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
+      if (acceptedFiles.length > 0) {
+        const newFiles = acceptedFiles.map((file) =>
+          Object.assign(file, {
+            preview: URL.createObjectURL(file),
+          }),
+        );
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
+        setFiles(newFiles);
+        onFilesAccepted?.(newFiles);
 
-    // Handle file upload logic here
-    const files = Array.from(e.dataTransfer.files);
-    console.log('Files dropped:', files);
-    // Implement file processing logic
-  };
+        if (onUpload) {
+          toast.promise(onUpload(newFiles), {
+            loading: 'Converting your presentation...',
+            success: () => {
+              setFiles([]);
+              return 'Conversion complete!';
+            },
+            error: 'Conversion failed. Please try again.',
+          });
+        }
+      }
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      // Handle file upload logic here
-      const files = Array.from(e.target.files);
-      console.log('Files selected:', files);
-      // Implement file processing logic
-    }
-  };
+      if (rejectedFiles.length > 0) {
+        rejectedFiles.forEach(({ file }) => {
+          if (file.size > maxSize) {
+            toast.error(
+              `"${file.name}" exceeds the ${formatBytes(maxSize)} file size limit`,
+            );
+          } else {
+            toast.error(
+              `"${file.name}" is not supported. Please use PowerPoint files (.ppt, .pptx) only.`,
+            );
+          }
+        });
+      }
+    },
+    [onFilesAccepted, onUpload, maxSize],
+  );
+
+  // Cleanup function to revoke object URLs on unmount
+  React.useEffect(() => {
+    return () => {
+      files.forEach((file) => {
+        if ('preview' in file) {
+          URL.revokeObjectURL((file as File & { preview: string }).preview);
+        }
+      });
+    };
+  }, [files]);
 
   return (
     <div className='w-full max-w-2xl mx-auto'>
-      <motion.div
-        className={`border-2 border-dashed rounded-lg p-12 text-center ${
-          isDragging
-            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-            : 'border-gray-300 dark:border-gray-700'
-        } transition-colors duration-200`}
-        onDragEnter={handleDragEnter}
-        onDragLeave={handleDragLeave}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-        whileHover={{ scale: 1.01 }}
-        animate={{
-          borderColor: isDragging ? '#3b82f6' : '#d1d5db',
-          backgroundColor: isDragging
-            ? 'rgba(59, 130, 246, 0.05)'
-            : 'transparent',
+      <Dropzone
+        onDrop={onDrop}
+        accept={{
+          'application/vnd.ms-powerpoint': ['.ppt'],
+          'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+            ['.pptx'],
         }}
+        maxSize={maxSize}
+        maxFiles={1}
+        multiple={false}
+        disabled={disabled}
       >
-        <div className='flex flex-col items-center justify-center'>
-          <div className='mb-4 p-3 rounded-full bg-blue-100 dark:bg-blue-900'>
-            <Upload className='h-8 w-8 text-blue-600 dark:text-blue-300' />
+        {({ getRootProps, getInputProps, isDragActive, isDragReject }) => (
+          <div
+            {...getRootProps()}
+            className={cn(
+              'group relative flex flex-col items-center justify-center h-52 w-full rounded-lg border-2 border-dashed px-5 py-6 text-center transition',
+              isDragActive
+                ? 'border-primary bg-primary/5'
+                : isDragReject
+                  ? 'border-destructive bg-destructive/5'
+                  : 'border-muted-foreground/25 hover:bg-muted/25',
+              disabled && 'pointer-events-none opacity-60',
+              className,
+            )}
+            {...props}
+          >
+            <input {...getInputProps()} />
+
+            <div className='flex flex-col items-center justify-center gap-4'>
+              <div
+                className={cn(
+                  'rounded-full p-3',
+                  isDragReject ? 'bg-destructive/10' : 'bg-primary/10',
+                )}
+              >
+                <Upload
+                  className={cn(
+                    'h-8 w-8',
+                    isDragReject ? 'text-destructive' : 'text-primary',
+                  )}
+                  aria-hidden='true'
+                />
+              </div>
+
+              <div className='flex flex-col gap-1'>
+                <p className='font-medium'>
+                  {isDragActive
+                    ? isDragReject
+                      ? 'This file type is not supported'
+                      : 'Drop your file here'
+                    : 'Drag & drop your PowerPoint file here'}
+                </p>
+                <p className='text-sm text-muted-foreground'>
+                  {isDragReject
+                    ? 'Please use .ppt or .pptx files only'
+                    : 'or click to browse your files'}
+                </p>
+              </div>
+
+              <p className='text-xs text-muted-foreground mt-2'>
+                Supports .ppt, .pptx files up to {formatBytes(maxSize)}
+              </p>
+            </div>
           </div>
+        )}
+      </Dropzone>
 
-          <h3 className='mb-2 text-xl font-medium text-gray-900 dark:text-white'>
-            Drag & drop your PowerPoint file here
-          </h3>
-
-          <p className='mb-6 text-sm text-gray-500 dark:text-gray-400'>
-            or click to browse your files
-          </p>
-
-          <input
-            type='file'
-            id='file-upload'
-            className='hidden'
-            accept='.ppt,.pptx'
-            onChange={handleFileSelect}
+      {files.length > 0 && (
+        <div className='mt-4 border rounded-md p-3 flex items-center gap-2'>
+          <FileText
+            className='h-10 w-10 text-muted-foreground'
+            aria-hidden='true'
           />
-
-          <label htmlFor='file-upload'>
-            <Button
-              className='bg-blue-600 hover:bg-blue-700 text-white'
-              type='button'
-            >
-              Select File
-            </Button>
-          </label>
-
-          <p className='mt-4 text-xs text-gray-500 dark:text-gray-400'>
-            Supports .ppt, .pptx files up to 50MB
-          </p>
+          <div className='flex flex-1 flex-col gap-1'>
+            <p className='text-sm font-medium'>{files[0].name}</p>
+            <p className='text-xs text-muted-foreground'>
+              {formatBytes(files[0].size)}
+            </p>
+            {progress !== undefined && (
+              <Progress value={progress} className='h-1 mt-1' />
+            )}
+          </div>
+          <Button
+            type='button'
+            variant='outline'
+            size='icon'
+            className='h-8 w-8'
+            onClick={() => setFiles([])}
+          >
+            <X className='h-4 w-4' aria-hidden='true' />
+            <span className='sr-only'>Remove file</span>
+          </Button>
         </div>
-      </motion.div>
+      )}
     </div>
   );
 }

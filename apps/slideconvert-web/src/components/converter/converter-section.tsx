@@ -1,9 +1,42 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { FileDropzone } from '@/components/converter';
 
 export function ConverterSection() {
+  const [, setFiles] = useState<File[]>([]);
+  const [progress, setProgress] = useState<number>(0);
+  const [isConverting, setIsConverting] = useState(false);
+
+  const handleFilesAccepted = (acceptedFiles: File[]) => {
+    setFiles(acceptedFiles);
+    setProgress(0);
+  };
+
+  const handleUpload = async (files: File[]): Promise<void> => {
+    if (files.length === 0) return;
+
+    setIsConverting(true);
+
+    // Simulate a conversion progress
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 500);
+
+    // Simulate an API request
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    clearInterval(interval);
+    setProgress(100);
+    setIsConverting(false);
+  };
+
   return (
     <section
       id='converter-section'
@@ -17,7 +50,12 @@ export function ConverterSection() {
         high-quality PDF in seconds.
       </p>
 
-      <FileDropzone />
+      <FileDropzone
+        onFilesAccepted={handleFilesAccepted}
+        onUpload={handleUpload}
+        progress={progress}
+        disabled={isConverting}
+      />
     </section>
   );
 }
