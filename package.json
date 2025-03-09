@@ -1,6 +1,14 @@
 {
-  "name": "SlideConvert",
+  "name": "slideconvert",
   "private": true,
   "version": "1.0.0",
-  "workspaces": ["packages/*", "apps/*"]
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:frontend": "bun --filter './apps/slideconvert-web' dev",
+    "dev:backend": "uv run --directory './apps/slideconvert-backend' fastapi dev",
+    "dev": "bun run dev:frontend & bun run dev:backend"
+  }
 }
