@@ -1,10 +1,10 @@
 services:
-  slideconvert-backend:
+  backend:
     build:
       context: ./apps/slideconvert-backend
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8000:80"
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
