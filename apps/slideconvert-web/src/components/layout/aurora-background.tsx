@@ -23,6 +23,64 @@ export const AuroraBackground = ({
   const { scrollY } = useScroll();
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTouching, setIsTouching] = useState(false);
+
+  // Detect mobile devices on mount and window resize
+  useEffect(() => {
+    const checkIfMobile = () => {
+      // Check if device is mobile based on screen width and/or user agent
+      const isMobileDevice =
+        window.innerWidth < 768 ||
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent,
+        );
+
+      setIsMobile(isMobileDevice);
+    };
+
+    // Check initially
+    checkIfMobile();
+
+    // Add resize listener
+    window.addEventListener('resize', checkIfMobile);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
+
+  // Add touch event listeners to preemptively pause animation
+  useEffect(() => {
+    // Only set up touch listeners on mobile
+    if (!isMobile) return;
+
+    // Pause animation as soon as user touches the screen
+    const handleTouchStart = () => {
+      setIsTouching(true);
+      controls.stop();
+    };
+
+    // Resume animation after touch ends (with delay)
+    const handleTouchEnd = () => {
+      setIsTouching(false);
+      // Wait a bit longer before resuming animation
+      setTimeout(() => {
+        if (!isScrolling && !isTouching) {
+          controls.start('animate');
+        }
+      }, 300);
+    };
+
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isMobile, controls, isScrolling, isTouching]);
 
   // Handle scroll events to pause animation
   useMotionValueEvent(scrollY, 'change', () => {
@@ -37,17 +95,22 @@ export const AuroraBackground = ({
     // Set a timeout to mark scrolling as finished after 150ms of no scroll events
     scrollTimeoutRef.current = window.setTimeout(() => {
       setIsScrolling(false);
+
+      // Only resume animation if not currently touching the screen
+      if (!isTouching) {
+        controls.start('animate');
+      }
     }, 150);
   });
 
   // Effect to control animation based on scrolling state
   useEffect(() => {
-    if (isScrolling) {
-      controls.stop(); // Pause animation during scroll
+    if (isScrolling || isTouching) {
+      controls.stop(); // Pause animation during scroll or touch
     } else {
-      controls.start('animate'); // Resume animation when not scrolling
+      controls.start('animate'); // Resume animation when not scrolling or touching
     }
-  }, [isScrolling, controls]);
+  }, [isScrolling, isTouching, controls]);
 
   // Clean up timeout on unmount
   useEffect(() => {
@@ -76,7 +139,8 @@ export const AuroraBackground = ({
               animate: {
                 backgroundPosition: '350% 50%, 350% 50%',
                 transition: {
-                  duration: 60,
+                  // Throttle animation on mobile by increasing duration
+                  duration: isMobile ? 120 : 60,
                   ease: 'linear',
                   repeat: Infinity,
                   repeatType: 'loop',
@@ -92,14 +156,14 @@ export const AuroraBackground = ({
             dark:[background-image:var(--dark-gradient),var(--aurora)]
             [background-size:300%,_200%]
             [background-position:50%_50%,50%_50%]
-            filter blur-[10px] invert dark:invert-0
+            ${isMobile ? 'filter blur-[5px]' : 'filter blur-[10px]'} invert dark:invert-0
             after:content-[""] after:absolute after:inset-0 after:[background-image:var(--white-gradient),var(--aurora)] 
             after:dark:[background-image:var(--dark-gradient),var(--aurora)]
             after:[background-size:200%,_100%] 
             after:[background-position:inherit]
-            after:mix-blend-difference
+            ${isMobile ? 'after:opacity-80' : ''} after:mix-blend-difference
             pointer-events-none
-            absolute -inset-[10px] opacity-50`,
+            absolute -inset-[10px] ${isMobile ? 'opacity-40' : 'opacity-50'}`,
 
               showRadialGradient &&
                 `[mask-image:radial-gradient(ellipse_at_100%_0%,black_40%,var(--transparent)_70%)]`,
