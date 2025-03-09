@@ -97,12 +97,12 @@ export function FileDropzone({
           <div
             {...getRootProps()}
             className={cn(
-              'group relative flex flex-col items-center justify-center h-52 w-full rounded-lg border-2 border-dashed px-5 py-6 text-center transition',
+              'group relative flex flex-col items-center justify-center h-52 w-full rounded-lg border-2 border-dashed px-5 py-6 text-center transition cursor-pointer',
               isDragActive
-                ? 'border-primary bg-primary/5'
+                ? 'border-primary backdrop-blur-md bg-white/20 dark:bg-slate-900/20'
                 : isDragReject
                   ? 'border-destructive bg-destructive/5'
-                  : 'border-muted-foreground/25 hover:bg-muted/25',
+                  : 'border-muted-foreground/25 hover:bg-white/10 hover:backdrop-blur-md hover:dark:bg-slate-900/10 hover:shadow-lg',
               disabled && 'pointer-events-none opacity-60',
               className,
             )}
