@@ -15,8 +15,6 @@ services:
     depends_on:
       - redis
       - unoserver
-    volumes:
-      - ./apps/slideconvert-backend:/app
   redis:
     image: redis:7-alpine
     ports:
@@ -27,6 +25,6 @@ services:
   unoserver:
     image: libreofficedocker/libreoffice-unoserver:3.19-9c28c22
     ports:
-      - "2003:2003" # unoserver api port
+      - "2004:2004"
 volumes:
   redis-data:
