@@ -7,7 +7,6 @@ import { ConverterSection } from '@/components/converter';
 
 export function HomePage() {
   const scrollToConverter = () => {
-    // Implement smooth scrolling to the converter section
     const converterSection = document.getElementById('converter-section');
     if (converterSection) {
       converterSection.scrollIntoView({ behavior: 'smooth' });

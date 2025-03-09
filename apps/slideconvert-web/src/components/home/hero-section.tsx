@@ -39,35 +39,37 @@ export function HeroSection({ onConvertClick }: HeroSectionProps) {
       </p>
 
       {/* Enhanced CTA Button */}
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onHoverStart={() => setIsHovered(true)}
-        onHoverEnd={() => setIsHovered(false)}
-        className='mb-16'
-      >
-        <Button
-          className='bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-6 px-8 rounded-full shadow-lg relative h-14 min-w-[180px]'
-          onClick={onConvertClick}
+      <div className='flex justify-center w-full'>
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onHoverStart={() => setIsHovered(true)}
+          onHoverEnd={() => setIsHovered(false)}
+          className='mb-16 inline-block'
         >
-          <motion.span
-            initial={{ opacity: 1 }}
-            animate={{ opacity: isHovered ? 0 : 1 }}
-            transition={{ duration: 0.2 }}
-            className='absolute inset-0 flex items-center justify-center'
+          <Button
+            className='bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-6 px-8 rounded-full shadow-lg relative h-14 min-w-[180px]'
+            onClick={onConvertClick}
           >
-            Convert now
-          </motion.span>
-          <motion.span
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isHovered ? 1 : 0 }}
-            transition={{ duration: 0.2 }}
-            className='flex items-center justify-center gap-2 absolute inset-0'
-          >
-            Upload your PPT <ArrowRight className='w-4 h-4' />
-          </motion.span>
-        </Button>
-      </motion.div>
+            <motion.span
+              initial={{ opacity: 1 }}
+              animate={{ opacity: isHovered ? 0 : 1 }}
+              transition={{ duration: 0.2 }}
+              className='absolute inset-0 flex items-center justify-center'
+            >
+              Convert now
+            </motion.span>
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isHovered ? 1 : 0 }}
+              transition={{ duration: 0.2 }}
+              className='flex items-center justify-center gap-2 absolute inset-0'
+            >
+              Upload your PPT <ArrowRight className='w-4 h-4' />
+            </motion.span>
+          </Button>
+        </motion.div>
+      </div>
     </motion.div>
   );
 }
