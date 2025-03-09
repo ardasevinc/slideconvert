@@ -28,6 +28,8 @@
     "eslint-config-next": "15.2.1",
     "postcss": "^8.5.3",
     "tailwindcss": "3",
-    "typescript": "^5"
-  }
+    "typescript": "^5",
+    "@slideconvert/prettier-config": "workspace:*"
+  },
+  "prettier": "@slideconvert/prettier-config"
 }
