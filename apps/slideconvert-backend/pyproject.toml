@@ -1,0 +1,7 @@
+[project]
+name = "slideconvert-backend"
+version = "0.1.0"
+description = "backend for slideconvert"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
