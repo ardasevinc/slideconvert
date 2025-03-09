@@ -1,6 +1,12 @@
 'use client';
 import { cn } from '@/lib/utils';
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect, useState, useRef } from 'react';
+import {
+  motion,
+  useAnimation,
+  useMotionValueEvent,
+  useScroll,
+} from 'framer-motion';
 
 interface AuroraBackgroundProps extends React.HTMLProps<HTMLDivElement> {
   children: ReactNode;
@@ -13,6 +19,45 @@ export const AuroraBackground = ({
   showRadialGradient = true,
   ...props
 }: AuroraBackgroundProps) => {
+  const controls = useAnimation();
+  const { scrollY } = useScroll();
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeoutRef = useRef<number | null>(null);
+
+  // Handle scroll events to pause animation
+  useMotionValueEvent(scrollY, 'change', () => {
+    // Set scrolling state to true
+    setIsScrolling(true);
+
+    // Clear any existing timeout
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+
+    // Set a timeout to mark scrolling as finished after 150ms of no scroll events
+    scrollTimeoutRef.current = window.setTimeout(() => {
+      setIsScrolling(false);
+    }, 150);
+  });
+
+  // Effect to control animation based on scrolling state
+  useEffect(() => {
+    if (isScrolling) {
+      controls.stop(); // Pause animation during scroll
+    } else {
+      controls.start('animate'); // Resume animation when not scrolling
+    }
+  }, [isScrolling, controls]);
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <main className='min-h-screen w-full'>
       <div
@@ -23,8 +68,21 @@ export const AuroraBackground = ({
         {...props}
       >
         <div className='absolute inset-0 overflow-hidden'>
-          <div
-            //   I'm sorry but this is what peak developer performance looks like // trigger warning
+          <motion.div
+            initial='initial'
+            animate={controls}
+            variants={{
+              initial: { backgroundPosition: '50% 50%, 50% 50%' },
+              animate: {
+                backgroundPosition: '350% 50%, 350% 50%',
+                transition: {
+                  duration: 60,
+                  ease: 'linear',
+                  repeat: Infinity,
+                  repeatType: 'loop',
+                },
+              },
+            }}
             className={cn(
               `
             [--white-gradient:repeating-linear-gradient(100deg,var(--white)_0%,var(--white)_7%,var(--transparent)_10%,var(--transparent)_12%,var(--white)_16%)]
@@ -38,14 +96,15 @@ export const AuroraBackground = ({
             after:content-[""] after:absolute after:inset-0 after:[background-image:var(--white-gradient),var(--aurora)] 
             after:dark:[background-image:var(--dark-gradient),var(--aurora)]
             after:[background-size:200%,_100%] 
-            after:animate-aurora after:[background-attachment:fixed] after:mix-blend-difference
+            after:[background-position:inherit]
+            after:mix-blend-difference
             pointer-events-none
-            absolute -inset-[10px] opacity-50 will-change-transform`,
+            absolute -inset-[10px] opacity-50`,
 
               showRadialGradient &&
                 `[mask-image:radial-gradient(ellipse_at_100%_0%,black_40%,var(--transparent)_70%)]`,
             )}
-          ></div>
+          ></motion.div>
         </div>
         <div className='relative z-10 w-full'>{children}</div>
       </div>
