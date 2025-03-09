@@ -1,5 +1,5 @@
-import { AuroraBackgroundDemo } from '@/components/ui/aurora-background-demo';
+import { HomePage } from '@/components/home/home-page';
 
 export default function Home() {
-  return <AuroraBackgroundDemo />;
+  return <HomePage />;
 }
