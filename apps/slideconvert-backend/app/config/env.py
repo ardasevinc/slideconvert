@@ -44,6 +44,7 @@ REQUIRED_ENV_VARS = [
     "R2_BUCKET_NAME",
     "UNOSERVER_URL",
     "API_KEY",
+    "ENV",
 ]
 
 check_env_vars(REQUIRED_ENV_VARS)
@@ -57,3 +58,4 @@ R2_ENDPOINT_URL = get_env_var("R2_ENDPOINT_URL")
 R2_BUCKET_NAME = get_env_var("R2_BUCKET_NAME")
 UNOSERVER_URL = get_env_var("UNOSERVER_URL")
 API_KEY = get_env_var("API_KEY")
+ENV = get_env_var("ENV")
