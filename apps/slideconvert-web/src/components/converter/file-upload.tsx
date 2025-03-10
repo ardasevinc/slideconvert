@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Dropzone, { type FileRejection } from 'react-dropzone';
 import { toast } from 'sonner';
 import { cn, formatBytes } from '@/lib/utils';
 import { UploadIcon } from '@/components/icons';
+import { Button } from '@/components/ui';
 
 interface FileUploadProps {
   onFilesAccepted: (files: File[]) => void;
@@ -17,9 +18,12 @@ export function FileUploadComponent({
   maxSize = 52428800, // 50MB
   disabled = false,
 }: FileUploadProps) {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
   const onDrop = React.useCallback(
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
       if (acceptedFiles.length > 0) {
+        setSelectedFile(acceptedFiles[0]);
         onFilesAccepted(acceptedFiles);
       }
       if (rejectedFiles.length > 0) {
@@ -49,7 +53,7 @@ export function FileUploadComponent({
         maxSize={maxSize}
         maxFiles={1}
         multiple={false}
-        disabled={disabled}
+        disabled={disabled || !!selectedFile}
       >
         {({ getRootProps, getInputProps, isDragActive, isDragReject }) => (
           <div
@@ -62,36 +66,75 @@ export function FileUploadComponent({
                   ? 'border-destructive bg-destructive/5'
                   : 'border-muted-foreground/25 hover:bg-white/5',
               disabled && 'pointer-events-none opacity-60',
+              selectedFile && 'pointer-events-none',
             )}
           >
             <input {...getInputProps()} />
-            <div className='flex flex-col items-center gap-4'>
-              <div
-                className={cn(
-                  'rounded-full p-4 bg-white/5',
-                  isDragReject ? 'bg-destructive/5' : '',
-                )}
-              >
-                <UploadIcon />
-              </div>
-              <div className='flex flex-col gap-1'>
-                <p className='font-medium'>
-                  {isDragActive
-                    ? isDragReject
-                      ? 'Unsupported file type'
-                      : 'Drop your file here'
-                    : 'Drag and drop a PowerPoint file to convert to PDF'}
+
+            {!selectedFile ? (
+              <div className='flex flex-col items-center gap-4'>
+                <div
+                  className={cn(
+                    'rounded-full p-4 bg-white/5',
+                    isDragReject ? 'bg-destructive/5' : '',
+                  )}
+                >
+                  <UploadIcon />
+                </div>
+                <div className='flex flex-col gap-1'>
+                  <p className='font-medium'>
+                    {isDragActive
+                      ? isDragReject
+                        ? 'Unsupported file type'
+                        : 'Drop your file here'
+                      : 'Drag and drop a PowerPoint file to convert to PDF'}
+                  </p>
+                  <p className='text-sm text-muted-foreground'>
+                    {isDragReject ? 'Use .ppt or .pptx files only' : 'or'}
+                  </p>
+                </div>
+                <Button variant='outline' className='mt-2'>
+                  Choose file
+                </Button>
+                <p className='text-xs text-muted-foreground mt-2'>
+                  Supports .ppt, .pptx files up to {formatBytes(maxSize)}
                 </p>
-                <p className='text-sm text-muted-foreground'>
-                  {isDragReject
-                    ? 'Use .ppt or .pptx files only'
-                    : 'or click to choose a file'}
-                </p>
               </div>
-              <p className='text-xs text-muted-foreground mt-2'>
-                Supports .ppt, .pptx files up to {formatBytes(maxSize)}
-              </p>
-            </div>
+            ) : (
+              <div className='w-full'>
+                <div className='bg-white/5 rounded-lg p-4 mb-4'>
+                  <div className='flex items-center justify-between'>
+                    <div className='text-lg font-medium'>
+                      {selectedFile.name}
+                    </div>
+                    <div className='text-sm text-muted-foreground'>
+                      {formatBytes(selectedFile.size)}
+                    </div>
+                  </div>
+                </div>
+                <div className='flex justify-between gap-4'>
+                  <Button
+                    variant='outline'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedFile(null);
+                    }}
+                    className='flex-1'
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onFilesAccepted([selectedFile]);
+                    }}
+                    className='flex-1'
+                  >
+                    Convert
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Dropzone>

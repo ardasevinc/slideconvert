@@ -15,12 +15,14 @@ export function ConversionCompleteComponent({
     <div className='w-full max-w-2xl'>
       <div className='flex flex-col items-center justify-center gap-6 p-8 border rounded-lg bg-white/5'>
         <div className='relative'>
-          <PdfIcon />
-          <div className='absolute -bottom-2 -right-2'>
-            <CheckIcon />
+          <div className='p-4 bg-white/5 rounded-lg'>
+            <PdfIcon className='w-16 h-16' />
+          </div>
+          <div className='absolute -bottom-2 -right-2 bg-green-500 rounded-full p-1'>
+            <CheckIcon className='w-5 h-5 text-white' />
           </div>
         </div>
-        <p className='text-lg font-medium'>File converted successfully!</p>
+        <p className='text-xl font-medium'>File converted successfully!</p>
         <div className='flex gap-4 w-full'>
           <Button
             variant='outline'

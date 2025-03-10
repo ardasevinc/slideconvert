@@ -1,10 +1,18 @@
-const CheckIcon = () => (
+import React from 'react';
+import { cn } from '@/lib/utils';
+
+interface IconProps {
+  className?: string;
+}
+
+const CheckIcon: React.FC<IconProps> = ({ className }) => (
   <svg
     width='24'
     height='24'
     viewBox='0 0 24 24'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
+    className={cn(className)}
   >
     <rect x='0.5' y='0.5' width='23' height='23' rx='11.5' fill='#D1FADF' />
     <rect x='0.5' y='0.5' width='23' height='23' rx='11.5' stroke='#12B76A' />

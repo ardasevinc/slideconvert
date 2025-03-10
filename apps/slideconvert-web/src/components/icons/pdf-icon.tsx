@@ -1,10 +1,18 @@
-const PdfIcon = () => (
+import React from 'react';
+import { cn } from '@/lib/utils';
+
+interface IconProps {
+  className?: string;
+}
+
+const PdfIcon: React.FC<IconProps> = ({ className }) => (
   <svg
     width='72'
     height='72'
     viewBox='0 0 72 72'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
+    className={cn(className)}
   >
     <path
       fillRule='evenodd'
