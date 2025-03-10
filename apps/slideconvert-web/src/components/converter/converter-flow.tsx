@@ -7,8 +7,7 @@ import { FileUploadComponent } from './file-upload';
 import { ConversionProgressComponent } from './conversion-progress';
 import { ConversionCompleteComponent } from './conversion-complete';
 import { apiQueries, convertPowerPoint, ApiError } from '@/lib/api';
-import { JobStatusResponse } from '@/lib/schemas/api.schema';
-import { z } from 'zod';
+import type { JobStatusResponse } from '@/lib/schemas/api.schema';
 
 type ConversionStep = 'upload' | 'converting' | 'completed';
 
@@ -47,43 +46,39 @@ export function ConverterFlow() {
     },
   });
 
-  // Get job status query - only enabled when we have a jobId
+  // Get job ID returned by the mutation
   const jobId = convertMutation.data?.job_id;
 
-  // Define the query with proper typing
-  const statusQuery = useQuery<z.infer<typeof JobStatusResponse>, Error>({
+  // Job status query with callbacks for side effects
+  const statusQuery = useQuery<JobStatusResponse>({
     queryKey: ['conversion', jobId || ''],
-    queryFn: () => {
+    queryFn: async () => {
       if (!jobId) throw new Error('Job ID is required');
-      return apiQueries.getConversionStatus(jobId).queryFn();
+      return await getConversionStatus(jobId);
     },
     enabled: !!jobId && !convertMutation.isPending,
-    refetchInterval: 1000, // Poll every second
-    refetchIntervalInBackground: true,
-    // Stop polling when the job is done or failed
-    refetchOnMount: true,
+    refetchInterval: (query) => {
+      if (query.state.data?.status === 'processing') {
+        return 1000;
+      }
+      return false;
+    },
     gcTime: 0, // Don't keep the data in cache
   });
 
-  // Add success and error effects
-  React.useEffect(() => {
-    if (statusQuery.data?.status === 'failed') {
-      toast.error(statusQuery.data.error || 'Conversion failed');
-      // Stop polling when job fails
-      queryClient.cancelQueries({ queryKey: ['conversion', jobId] });
-    } else if (statusQuery.data?.status === 'done') {
-      toast.success('File converted successfully!');
-      // Stop polling when job is done
-      queryClient.cancelQueries({ queryKey: ['conversion', jobId] });
-    }
-  }, [statusQuery.data, jobId, queryClient]);
+  // Handle status changes with side effects
+  const currentStatus = statusQuery.data?.status;
 
-  // Handle error
-  React.useEffect(() => {
-    if (statusQuery.error) {
-      toast.error('Failed to check conversion status');
-    }
-  }, [statusQuery.error]);
+  // Show notifications when status changes
+  if (currentStatus === 'failed' && statusQuery.isSuccess) {
+    toast.error(statusQuery.data.error || 'Conversion failed');
+  } else if (currentStatus === 'done' && statusQuery.isSuccess) {
+    toast.success('File converted successfully!');
+  }
+
+  if (statusQuery.isError) {
+    toast.error('Failed to check conversion status');
+  }
 
   // Determine current step based on query states
   const getCurrentStep = (): ConversionStep => {
@@ -98,9 +93,9 @@ export function ConverterFlow() {
   // Handle file acceptance
   const handleFileAccepted = (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      const file = acceptedFiles[0];
-      setFile(file);
-      convertMutation.mutate(file);
+      const selectedFile = acceptedFiles[0];
+      setFile(selectedFile);
+      convertMutation.mutate(selectedFile);
     }
   };
 
@@ -174,4 +169,9 @@ export function ConverterFlow() {
       )}
     </section>
   );
+}
+
+// Helper function to get conversion status directly
+async function getConversionStatus(jobId: string) {
+  return await apiQueries.getConversionStatus(jobId).queryFn();
 }
