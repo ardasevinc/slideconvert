@@ -1,11 +1,21 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Path, status
 from rq import Queue
 from redis import Redis
 from app.config.env import REDIS_HOST, REDIS_PORT, REDIS_PASSWORD
 from app.workers.convert import process_slide
+from app.schemas.models import (
+    HealthResponse,
+    ConversionResponse,
+    JobStatusResponse,
+    JobStatusProcessingResponse,
+    JobStatusDoneResponse,
+    JobStatusFailedResponse,
+)
+from app.schemas.validators import validate_slide_file
 from uuid import uuid4
 import shutil
 import os
+from typing import Union
 
 # Initialize the API router
 router = APIRouter()
@@ -17,23 +27,53 @@ redis_conn = Redis(host=REDIS_HOST, port=int(REDIS_PORT), password=REDIS_PASSWOR
 q = Queue(connection=redis_conn)
 
 
-@router.get("/health")
+@router.get(
+    "/health",
+    response_model=HealthResponse,
+    summary="API Health Check",
+    description="Returns the health status of the API",
+    tags=["health"],
+    status_code=status.HTTP_200_OK,
+)
 async def health():
+    """
+    Check the health of the API server.
+
+    Returns:
+        A JSON object with the status "ok" if the server is running properly.
+    """
     return {"status": "ok"}
 
 
-@router.post("/convert")
+@router.post(
+    "/convert",
+    response_model=ConversionResponse,
+    summary="Convert PowerPoint to PDF",
+    description="Upload a PowerPoint file (.ppt or .pptx) to convert it to PDF format. The conversion will be processed asynchronously.",
+    tags=["conversion"],
+    status_code=status.HTTP_202_ACCEPTED,
+)
 async def convert_slide(file: UploadFile = File(...)):
     """
-    Endpoint to upload a .ppt or .pptx file for conversion.
-    - Validates the file type.
-    - Saves the file temporarily with a unique name.
-    - Enqueues a background task to process the file.
-    - Returns a job ID for status tracking.
+    Convert a PowerPoint slide to PDF.
+
+    This endpoint:
+    - Validates the file type (.ppt or .pptx)
+    - Saves the file temporarily
+    - Enqueues a background task to process the conversion
+    - Returns a job ID to track the status
+
+    Args:
+        file: The PowerPoint file to convert
+
+    Returns:
+        A JSON object with a job_id to track the conversion status
+
+    Raises:
+        HTTPException: If the file type is invalid or if there's an error processing the file
     """
-    # Check if the file has a valid extension
-    if not file.filename or not file.filename.lower().endswith((".ppt", ".pptx")):
-        raise HTTPException(status_code=400, detail="only .ppt or .pptx files allowed")
+    # Validate the file type
+    validate_slide_file(file)
 
     # Preserve the original file extension
     file_ext = os.path.splitext(file.filename)[1] if file.filename else ""
@@ -52,23 +92,55 @@ async def convert_slide(file: UploadFile = File(...)):
     return {"job_id": job.id}
 
 
-@router.get("/status/{job_id}")
-async def get_status(job_id: str):
+@router.get(
+    "/status/{job_id}",
+    response_model=JobStatusResponse,
+    responses={
+        200: {
+            "model": Union[
+                JobStatusProcessingResponse,
+                JobStatusDoneResponse,
+                JobStatusFailedResponse,
+            ],
+            "description": "The current status of the job",
+        },
+        404: {"description": "Job not found"},
+    },
+    summary="Check Conversion Status",
+    description="Check the status of a conversion job by its job ID. Returns the current status and additional information based on the state.",
+    tags=["status"],
+)
+async def get_status(
+    job_id: str = Path(..., description="The ID of the conversion job to check"),
+):
     """
-    Endpoint to check the status of a conversion job.
-    - Fetches the job from the queue.
-    - Returns the status and result (if completed) or error (if failed).
+    Get the status of a conversion job.
+
+    Args:
+        job_id: The ID of the job to check status for
+
+    Returns:
+        A JSON object with the status and additional information based on the state:
+        - "processing": Job is still in progress
+        - "done": Job has completed with a download URL
+        - "failed": Job failed with an error message
+
+    Raises:
+        HTTPException: If the job with the given ID doesn't exist
     """
     # Fetch the job from the queue using the job ID
     job = q.fetch_job(job_id)
 
     # If job doesn't exist, return not found
     if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
+        )
 
     # Check job status and respond accordingly
     if job.is_finished:
         return {"status": "done", "url": job.result}
     elif job.is_failed:
         return {"status": "failed", "error": str(job.exc_info)}
+
     return {"status": "processing"}
