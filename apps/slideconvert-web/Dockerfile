@@ -46,4 +46,4 @@ COPY --from=builder /app/apps/slideconvert-web/public ./public
 USER bun
 EXPOSE 3000
 
-CMD ["bun", "server.js"]
+CMD ["bun", "./apps/slideconvert-web/server.js"]
