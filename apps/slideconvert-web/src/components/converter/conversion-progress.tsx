@@ -7,12 +7,14 @@ interface ConversionProgressProps {
   onCancel: () => void;
   filename: string;
   filesize: number;
+  isUploading?: boolean;
 }
 
 export function ConversionProgressComponent({
   onCancel,
   filename,
   filesize,
+  isUploading = false,
 }: ConversionProgressProps) {
   return (
     <div className='w-full max-w-2xl'>
@@ -37,7 +39,9 @@ export function ConversionProgressComponent({
           <div className='rounded-full bg-primary/10 p-2'>
             <LoadingIndicatorIcon className='w-6 h-6' />
           </div>
-          <span className='font-medium'>Converting your file</span>
+          <span className='font-medium'>
+            {isUploading ? 'Uploading your file...' : 'Converting your file...'}
+          </span>
         </div>
 
         {/* Action button */}

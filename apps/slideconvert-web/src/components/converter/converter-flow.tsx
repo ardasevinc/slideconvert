@@ -1,75 +1,141 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { FileUploadComponent } from './file-upload';
 import { ConversionProgressComponent } from './conversion-progress';
 import { ConversionCompleteComponent } from './conversion-complete';
-import { convertFile } from '@/lib/convert-file';
+import { apiQueries, convertPowerPoint, ApiError } from '@/lib/api';
+import { JobStatusResponse } from '@/lib/schemas/api.schema';
+import { z } from 'zod';
 
 type ConversionStep = 'upload' | 'converting' | 'completed';
 
 export function ConverterFlow() {
-  const [currentStep, setCurrentStep] = useState<ConversionStep>('upload');
   const [file, setFile] = useState<File | null>(null);
-  const [convertedFileUrl, setConvertedFileUrl] = useState<string | null>(null);
-  const [isConverting, setIsConverting] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Create an AbortController ref for cancellation
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // Convert PowerPoint mutation with abort signal
+  const convertMutation = useMutation({
+    mutationFn: async (file: File) => {
+      // Create a new AbortController for this request
+      abortControllerRef.current = new AbortController();
+      const signal = abortControllerRef.current.signal;
+
+      try {
+        // Pass signal to the API function
+        return await convertPowerPoint(file, signal);
+      } catch (error) {
+        // Don't throw AbortError - it's expected
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log('Conversion cancelled');
+          return null;
+        }
+        throw error;
+      }
+    },
+    onError: (error: unknown) => {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : 'Failed to start conversion';
+      toast.error(message);
+    },
+  });
+
+  // Get job status query - only enabled when we have a jobId
+  const jobId = convertMutation.data?.job_id;
+
+  // Define the query with proper typing
+  const statusQuery = useQuery<z.infer<typeof JobStatusResponse>, Error>({
+    queryKey: ['conversion', jobId || ''],
+    queryFn: () => {
+      if (!jobId) throw new Error('Job ID is required');
+      return apiQueries.getConversionStatus(jobId).queryFn();
+    },
+    enabled: !!jobId && !convertMutation.isPending,
+    refetchInterval: 1000, // Poll every second
+    refetchIntervalInBackground: true,
+    // Stop polling when the job is done or failed
+    refetchOnMount: true,
+    gcTime: 0, // Don't keep the data in cache
+  });
+
+  // Add success and error effects
+  React.useEffect(() => {
+    if (statusQuery.data?.status === 'failed') {
+      toast.error(statusQuery.data.error || 'Conversion failed');
+      // Stop polling when job fails
+      queryClient.cancelQueries({ queryKey: ['conversion', jobId] });
+    } else if (statusQuery.data?.status === 'done') {
+      toast.success('File converted successfully!');
+      // Stop polling when job is done
+      queryClient.cancelQueries({ queryKey: ['conversion', jobId] });
+    }
+  }, [statusQuery.data, jobId, queryClient]);
+
+  // Handle error
+  React.useEffect(() => {
+    if (statusQuery.error) {
+      toast.error('Failed to check conversion status');
+    }
+  }, [statusQuery.error]);
+
+  // Determine current step based on query states
+  const getCurrentStep = (): ConversionStep => {
+    if (convertMutation.isPending) return 'converting';
+    if (statusQuery.data?.status === 'processing') return 'converting';
+    if (statusQuery.data?.status === 'done') return 'completed';
+    return 'upload';
+  };
+
+  const currentStep = getCurrentStep();
+
+  // Handle file acceptance
   const handleFileAccepted = (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      setFile(acceptedFiles[0]);
-      setCurrentStep('converting');
-      startConversion(acceptedFiles[0]);
+      const file = acceptedFiles[0];
+      setFile(file);
+      convertMutation.mutate(file);
     }
   };
 
-  const startConversion = async (file: File) => {
-    setIsConverting(true);
-    abortControllerRef.current = new AbortController();
-    try {
-      const convertedBlob = await convertFile(
-        file,
-        abortControllerRef.current.signal,
-      );
-      const url = URL.createObjectURL(convertedBlob);
-      setConvertedFileUrl(url);
-      setCurrentStep('completed');
-      toast.success('File converted successfully!');
-    } catch (error) {
-      if (error instanceof Error && error.name !== 'AbortError') {
-        toast.error('Conversion failed. Please try again.');
-        setCurrentStep('upload');
-      }
-    } finally {
-      setIsConverting(false);
-    }
-  };
-
+  // Handle cancellation
   const handleCancel = () => {
+    // Cancel in-flight request if any
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
+      abortControllerRef.current = null;
     }
+
+    // Reset mutation and query state
+    convertMutation.reset();
+
+    // Remove query data to stop polling
+    if (jobId) {
+      queryClient.removeQueries({ queryKey: ['conversion', jobId] });
+    }
+
     setFile(null);
-    setCurrentStep('upload');
   };
 
+  // Handle "convert another"
   const handleConvertAnother = () => {
-    if (convertedFileUrl) {
-      URL.revokeObjectURL(convertedFileUrl);
+    // Reset all state
+    convertMutation.reset();
+    if (jobId) {
+      queryClient.removeQueries({ queryKey: ['conversion', jobId] });
     }
     setFile(null);
-    setConvertedFileUrl(null);
-    setCurrentStep('upload');
   };
 
-  useEffect(() => {
-    return () => {
-      if (convertedFileUrl) {
-        URL.revokeObjectURL(convertedFileUrl);
-      }
-    };
-  }, [convertedFileUrl]);
+  // Get download URL from completed job
+  const downloadUrl =
+    statusQuery.data?.status === 'done' ? statusQuery.data.url : null;
 
   return (
     <section
@@ -87,7 +153,7 @@ export function ConverterFlow() {
       {currentStep === 'upload' && (
         <FileUploadComponent
           onFilesAccepted={handleFileAccepted}
-          disabled={isConverting}
+          disabled={convertMutation.isPending}
         />
       )}
 
@@ -96,12 +162,13 @@ export function ConverterFlow() {
           onCancel={handleCancel}
           filename={file.name}
           filesize={file.size}
+          isUploading={convertMutation.isPending}
         />
       )}
 
-      {currentStep === 'completed' && convertedFileUrl && (
+      {currentStep === 'completed' && downloadUrl && (
         <ConversionCompleteComponent
-          fileUrl={convertedFileUrl}
+          fileUrl={downloadUrl}
           onConvertAnother={handleConvertAnother}
         />
       )}

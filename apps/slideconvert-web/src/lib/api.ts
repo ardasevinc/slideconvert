@@ -67,6 +67,7 @@ async function handleResponse<T>(
  */
 export async function convertPowerPoint(
   file: File,
+  signal?: AbortSignal,
 ): Promise<ConversionResponse> {
   // Validate the file
   FileUpload.parse({ file });
@@ -78,6 +79,7 @@ export async function convertPowerPoint(
     method: 'POST',
     headers: getHeaders(false),
     body: formData,
+    signal,
   });
 
   return handleResponse(response, ConversionResponse);
@@ -88,6 +90,7 @@ export async function convertPowerPoint(
  */
 export async function getConversionStatus(
   jobId: string,
+  signal?: AbortSignal,
 ): Promise<z.infer<typeof JobStatusResponse>> {
   if (!jobId) {
     throw new Error('Job ID is required');
@@ -96,6 +99,7 @@ export async function getConversionStatus(
   const response = await fetch(`${API_CONFIG.BASE_URL}/status/${jobId}`, {
     method: 'GET',
     headers: getHeaders(),
+    signal,
   });
 
   return handleResponse(response, JobStatusResponse);
