@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "dev:frontend": "bun --filter './apps/slideconvert-web' dev",
-    "dev:backend": "uv run --directory './apps/slideconvert-backend' fastapi dev",
+    "dev:backend": "uv run --directory './apps/slideconvert-backend' fastapi dev app/main.py",
     "dev": "bun run dev:frontend & bun run dev:backend"
   }
 }
