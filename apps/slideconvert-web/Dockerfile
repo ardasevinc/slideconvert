@@ -5,12 +5,12 @@ WORKDIR /app
 # deps caching, monorepo style
 FROM base AS deps
 RUN mkdir -p /temp/dev
-COPY ./apps/slideconvert-web/package.json ./bun.lockb /temp/dev/
+COPY ./apps/slideconvert-web/package.json ./bun.lock /temp/dev/
 RUN cd /temp/dev && bun install --frozen-lockfile
 
 # prod deps, no fluff
 RUN mkdir -p /temp/prod
-COPY ./apps/slideconvert-web/package.json ./bun.lockb /temp/prod/
+COPY ./apps/slideconvert-web/package.json ./bun.lock /temp/prod/
 RUN cd /temp/prod && bun install --frozen-lockfile --production
 
 # build stage, scoped to slideconvert-web
