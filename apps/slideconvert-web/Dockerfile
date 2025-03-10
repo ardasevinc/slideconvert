@@ -1,47 +1,45 @@
-# bun base, still fire
+# bun base
 FROM oven/bun:1 AS base
 WORKDIR /app
 
-# deps caching, monorepo style
+# deps caching, full monorepo
 FROM base AS deps
 RUN mkdir -p /temp/dev
-COPY ./apps/slideconvert-web/package.json ./bun.lock /temp/dev/
+# copy root package.json and lockfile
+COPY ./package.json ./bun.lock /temp/dev/
+# copy slideconvert-web package.json
+COPY ./apps/slideconvert-web/package.json /temp/dev/apps/slideconvert-web/
+# copy the workspace package (adjust path if diff)
+COPY ./packages/prettier-config/package.json /temp/dev/packages/prettier-config/
 RUN cd /temp/dev && bun install --frozen-lockfile
 
-# prod deps, no fluff
+# prod deps
 RUN mkdir -p /temp/prod
-COPY ./apps/slideconvert-web/package.json ./bun.lock /temp/prod/
+COPY ./package.json ./bun.lock /temp/prod/
+COPY ./apps/slideconvert-web/package.json /temp/prod/apps/slideconvert-web/
+COPY ./packages/prettier-config/package.json /temp/prod/packages/prettier-config/
 RUN cd /temp/prod && bun install --frozen-lockfile --production
 
-# build stage, scoped to slideconvert-web
+# build stage
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /temp/dev/node_modules ./node_modules
-COPY ./apps/slideconvert-web/ .
-
-# telemetry off, keep it clean
+COPY ./apps/slideconvert-web/ ./apps/slideconvert-web/
+COPY ./packages/prettier-config/ ./packages/prettier-config/
+COPY ./package.json ./bun.lock ./
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+RUN cd apps/slideconvert-web && bun run build
 
-# build it
-RUN bun run build
-
-# final image, just the essentials
+# runner
 FROM base AS runner
 WORKDIR /app
-
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-
-# copy standalone output from the subdir
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
-
-# run as bun user
+COPY --from=builder /app/apps/slideconvert-web/.next/standalone ./apps/slideconvert-web/
+COPY --from=builder /app/apps/slideconvert-web/.next/static ./apps/slideconvert-web/.next/static
+COPY --from=builder /app/apps/slideconvert-web/public ./apps/slideconvert-web/public
 USER bun
 EXPOSE 3000
-
-# nextjs standalone server.js, bun handles it
-CMD ["bun", "server.js"]
+CMD ["bun", "apps/slideconvert-web/server.js"]
