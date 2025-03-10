@@ -34,12 +34,16 @@ RUN cd apps/slideconvert-web && bun run build
 # runner
 FROM base AS runner
 WORKDIR /app
+
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-COPY --from=builder /app/apps/slideconvert-web/.next/standalone ./apps/slideconvert-web/
-COPY --from=builder /app/apps/slideconvert-web/.next/static ./apps/slideconvert-web/.next/static
-COPY --from=builder /app/apps/slideconvert-web/public ./apps/slideconvert-web/public
+
+COPY --from=builder /app/apps/slideconvert-web/.next/standalone ./
+COPY --from=builder /app/apps/slideconvert-web/.next/static ./.next/static
+COPY --from=builder /app/apps/slideconvert-web/public ./public
+
 USER bun
 EXPOSE 3000
-CMD ["bun", "apps/slideconvert-web/server.js"]
+
+CMD ["bun", "server.js"]
