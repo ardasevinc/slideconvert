@@ -1,4 +1,4 @@
-import aiohttp
+import requests
 import io
 import os
 from fastapi import HTTPException
@@ -8,7 +8,7 @@ from urllib.parse import urljoin
 ENDPOINT = "/request"
 
 
-async def convert_file_with_unoserver(
+def convert_file_with_unoserver(
     file_path: str, convert_to: str, opts: list[str] | None = None
 ) -> io.BytesIO:
     """
@@ -25,27 +25,19 @@ async def convert_file_with_unoserver(
     Raises:
         HTTPException: If the unoserver request fails.
     """
-    async with aiohttp.ClientSession() as session:
-        # Build the multipart form data
-        form = aiohttp.FormData()
-
-        # Get the filename from the path
-        filename = os.path.basename(file_path)
-
-        # Add the file from the path
-        with open(file_path, "rb") as f:
-            file_data = f.read()
-
-        form.add_field("file", file_data, filename=filename)
-        form.add_field("convert-to", convert_to)
+    # Build the form data
+    with open(file_path, "rb") as f:
+        files = {"file": (os.path.basename(file_path), f)}
+        data = {"convert-to": convert_to}
         if opts:
-            for opt in opts:
-                form.add_field("opts[]", opt)
+            data["opts[]"] = ",".join(opts)
 
         # Send the POST request to unoserver
-        async with session.post(urljoin(UNOSERVER_URL, ENDPOINT), data=form) as resp:
-            if resp.status != 200:
-                raise HTTPException(
-                    status_code=500, detail="unoserver conversion failed"
-                )
-            return io.BytesIO(await resp.read())
+        response = requests.post(
+            urljoin(UNOSERVER_URL, ENDPOINT), files=files, data=data
+        )
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=500, detail="unoserver conversion failed")
+
+    return io.BytesIO(response.content)
