@@ -10,6 +10,7 @@ from app.schemas.docs import (
     TAGS_METADATA,
     get_swagger_ui_settings,
 )
+from fastapi.openapi.utils import get_openapi
 
 # Create the FastAPI application instance with documentation settings
 app = FastAPI(
@@ -20,8 +21,42 @@ app = FastAPI(
     license_info=LICENSE_INFO,
     openapi_tags=TAGS_METADATA,
     swagger_ui_parameters=get_swagger_ui_settings(),
-    # Keep the default docs_url which is /docs
 )
+
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=API_TITLE,
+        version=API_VERSION,
+        description=API_DESCRIPTION,
+        routes=app.routes,
+    )
+
+    # Ensure components object exists
+    if "components" not in openapi_schema:
+        openapi_schema["components"] = {}
+
+    # Add API Key security scheme while preserving existing components
+    openapi_schema["components"]["securitySchemes"] = {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-API-Key",
+            "description": "Enter your API key",
+        }
+    }
+
+    # Add global security requirement
+    openapi_schema["security"] = [{"ApiKeyAuth": []}]
+
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
 
 
 # Add a root route to redirect to the API documentation
