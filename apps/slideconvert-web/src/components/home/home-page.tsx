@@ -3,7 +3,7 @@
 import React from 'react';
 import { AuroraBackground } from '@/components/layout';
 import { HeroSection, FeaturesSection, StatsSection } from '@/components/home';
-import { ConverterSection } from '@/components/converter';
+import { ConverterFlow } from '@/components/converter';
 
 export function HomePage() {
   const scrollToConverter = () => {
@@ -23,7 +23,7 @@ export function HomePage() {
       </section>
 
       {/* Converter Section */}
-      <ConverterSection />
+      <ConverterFlow />
     </AuroraBackground>
   );
 }
