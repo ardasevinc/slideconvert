@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Path, status
+from fastapi import APIRouter, UploadFile, File, HTTPException, Path, status, Depends
 from rq import Queue
 from redis import Redis
 from app.config.env import REDIS_HOST, REDIS_PORT, REDIS_PASSWORD
@@ -12,6 +12,7 @@ from app.schemas.models import (
     JobStatusFailedResponse,
 )
 from app.schemas.validators import validate_slide_file
+from app.utils.security import get_api_key
 from uuid import uuid4
 import shutil
 import os
@@ -52,6 +53,7 @@ async def health():
     description="Upload a PowerPoint file (.ppt or .pptx) to convert it to PDF format. The conversion will be processed asynchronously.",
     tags=["conversion"],
     status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(get_api_key)],
 )
 async def convert_slide(file: UploadFile = File(...)):
     """
@@ -109,6 +111,7 @@ async def convert_slide(file: UploadFile = File(...)):
     summary="Check Conversion Status",
     description="Check the status of a conversion job by its job ID. Returns the current status and additional information based on the state.",
     tags=["status"],
+    dependencies=[Depends(get_api_key)],
 )
 async def get_status(
     job_id: str = Path(..., description="The ID of the conversion job to check"),
