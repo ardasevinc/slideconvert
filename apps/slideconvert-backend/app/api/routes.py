@@ -2,7 +2,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from rq import Queue
 from redis import Redis
 from app.config.env import REDIS_HOST, REDIS_PORT, REDIS_PASSWORD
-from workers.convert import process_slide
+from app.workers.convert import process_slide
 from uuid import uuid4
 import shutil
 import os

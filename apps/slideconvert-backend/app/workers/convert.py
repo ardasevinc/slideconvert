@@ -1,5 +1,5 @@
-from utils.unoserver import convert_file_with_unoserver
-from utils.r2 import upload_to_r2, generate_presigned_url
+from app.utils.unoserver import convert_file_with_unoserver
+from app.utils.r2 import upload_to_r2, generate_presigned_url
 import os
 from datetime import datetime
 
