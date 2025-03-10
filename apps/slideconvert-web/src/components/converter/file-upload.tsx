@@ -59,18 +59,18 @@ export function FileUploadComponent({
             <div
               {...getRootProps()}
               className={cn(
-                'group flex flex-col items-center justify-center h-56 w-full rounded-lg border-2 border-dashed px-8 py-10 text-center cursor-pointer transition',
+                'group flex flex-col items-center justify-center h-64 w-full rounded-lg border border-muted-foreground/25 px-8 py-10 text-center cursor-pointer transition',
                 isDragActive
                   ? 'border-primary bg-white/5'
                   : isDragReject
                     ? 'border-destructive bg-destructive/5'
-                    : 'border-muted-foreground/25 hover:bg-white/5',
+                    : 'hover:bg-white/5',
                 disabled && 'pointer-events-none opacity-60',
               )}
             >
               <input {...getInputProps()} />
 
-              <div className='flex flex-col items-center gap-6'>
+              <div className='flex flex-col items-center gap-3'>
                 <div
                   className={cn(
                     'rounded-full p-4 bg-white/5',
@@ -102,18 +102,25 @@ export function FileUploadComponent({
           )}
         </Dropzone>
       ) : (
-        <div className='w-full p-6 bg-white/[0.01] rounded-lg border border-muted-foreground/10'>
-          {/* File info card */}
-          <div className='w-full border border-gray-200/20 rounded-lg p-6 text-center mb-3 bg-white/[0.02]'>
-            <h3 className='text-base font-medium'>{selectedFile.name}</h3>
-            <p className='text-sm text-muted-foreground mt-1'>
-              {formatBytes(selectedFile.size)}
-            </p>
+        <div className='w-full rounded-lg border border-muted-foreground/20 p-8'>
+          {/* File card */}
+          <div className='w-full rounded-lg p-4 flex items-center justify-between border border-muted-foreground/20 bg-white/[0.02] mb-6'>
+            <div className='flex items-center gap-3'>
+              <div className='flex-shrink-0 w-10 h-10 rounded bg-blue-500/10 flex items-center justify-center'>
+                <span className='text-xs font-medium'>.ppt</span>
+              </div>
+              <div className='text-left'>
+                <h3 className='text-sm font-medium'>{selectedFile.name}</h3>
+                <p className='text-xs text-muted-foreground'>
+                  {formatBytes(selectedFile.size)}
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Convert option card */}
           <div
-            className='w-full border border-blue-500/30 rounded-lg bg-blue-500/[0.03] p-4 mb-4 cursor-pointer hover:bg-blue-500/[0.05] transition-colors'
+            className='w-full border border-blue-500/30 rounded-lg bg-blue-500/[0.03] p-4 mb-6 cursor-pointer hover:bg-blue-500/[0.05] transition-colors'
             onClick={() => onFilesAccepted([selectedFile])}
           >
             <div className='flex items-center gap-3'>
@@ -130,17 +137,17 @@ export function FileUploadComponent({
           </div>
 
           {/* Action buttons */}
-          <div className='flex gap-3'>
+          <div className='flex gap-4'>
             <Button
               variant='outline'
               onClick={() => setSelectedFile(null)}
-              className='flex-1 font-normal border-gray-200/20'
+              className='flex-1 min-w-32'
             >
               Cancel
             </Button>
             <Button
               onClick={() => onFilesAccepted([selectedFile])}
-              className='flex-1 bg-blue-600 hover:bg-blue-700 font-medium'
+              className='flex-1 min-w-32 bg-blue-600 hover:bg-blue-700'
             >
               Convert
             </Button>
