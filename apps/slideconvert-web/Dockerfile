@@ -39,11 +39,13 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+# copy the entire standalone dir, including its internal structure
 COPY --from=builder /app/apps/slideconvert-web/.next/standalone ./
-COPY --from=builder /app/apps/slideconvert-web/.next/static ./.next/static
-COPY --from=builder /app/apps/slideconvert-web/public ./public
+# copy public dir for any static assets (like images)
+COPY --from=builder /app/apps/slideconvert-web/public ./apps/slideconvert-web/public
 
 USER bun
 EXPOSE 3000
 
-CMD ["bun", "./apps/slideconvert-web/server.js"]
+# run server.js from the root, not nested
+CMD ["bun", "server.js"]
