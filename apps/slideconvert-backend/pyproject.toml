@@ -5,6 +5,10 @@ description = "backend for slideconvert"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "boto3>=1.37.9",
     "fastapi[standard]>=0.115.11",
+    "python-multipart>=0.0.20",
+    "requests>=2.32.3",
+    "rq>=2.1.0",
     "uvicorn>=0.34.0",
 ]
