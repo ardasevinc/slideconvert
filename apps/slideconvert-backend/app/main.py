@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from app.api.routes import router
 from app.schemas.docs import (
@@ -11,6 +11,7 @@ from app.schemas.docs import (
     get_swagger_ui_settings,
 )
 from fastapi.openapi.utils import get_openapi
+from app.config.cors import add_cors_middleware
 
 # Create the FastAPI application instance with documentation settings
 app = FastAPI(
@@ -22,6 +23,9 @@ app = FastAPI(
     openapi_tags=TAGS_METADATA,
     swagger_ui_parameters=get_swagger_ui_settings(),
 )
+
+
+add_cors_middleware(app)
 
 
 def custom_openapi():
