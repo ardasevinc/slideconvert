@@ -42,7 +42,6 @@ REQUIRED_ENV_VARS = [
     "R2_SECRET_KEY",
     "R2_ENDPOINT_URL",
     "R2_BUCKET_NAME",
-    "R2_BASE_PATH",
     "UNOSERVER_URL",
 ]
 
@@ -55,5 +54,4 @@ R2_ACCESS_KEY = get_env_var("R2_ACCESS_KEY")
 R2_SECRET_KEY = get_env_var("R2_SECRET_KEY")
 R2_ENDPOINT_URL = get_env_var("R2_ENDPOINT_URL")
 R2_BUCKET_NAME = get_env_var("R2_BUCKET_NAME")
-R2_BASE_PATH = get_env_var("R2_BASE_PATH")
 UNOSERVER_URL = get_env_var("UNOSERVER_URL")
