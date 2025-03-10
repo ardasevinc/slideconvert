@@ -13,8 +13,8 @@ if IS_DEVELOPMENT:
     ]
 else:
     origins = [
-        "https://slideconvert.ardasevinc.xyz",
-        "https://www.slideconvert.ardasevinc.xyz",
+        "https://slideconvert-web.ardasevinc.xyz",
+        "https://www.slideconvert-web.ardasevinc.xyz",
     ]
 
 
