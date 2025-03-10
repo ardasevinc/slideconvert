@@ -60,6 +60,12 @@ export default {
       },
       animation: {
         aurora: 'aurora 60s linear infinite',
+        'spin-pretty': 'spin-pretty 1s cubic-bezier(0.4, 0.0, 0.2, 1) infinite',
+        bounce200: 'bounce 1s infinite 250ms',
+        bounce400: 'bounce 1s infinite 500ms',
+        bounce600: 'bounce 1s infinite 750ms',
+        enter: 'enter-keyframes 200ms ease-out',
+        leave: 'leave-keyframes 150ms ease-in forwards',
       },
       keyframes: {
         aurora: {
@@ -68,6 +74,28 @@ export default {
           },
           to: {
             backgroundPosition: '350% 50%, 350% 50%',
+          },
+        },
+        'spin-pretty': {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' },
+        },
+        'enter-keyframes': {
+          '0%': { transform: 'scale(0.9)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        'leave-keyframes': {
+          '0%': { transform: 'scale(1)', opacity: '1' },
+          '100%': { transform: 'scale(0.9)', opacity: '0' },
+        },
+        bounce: {
+          '0%, 100%': {
+            transform: 'translateY(-3px)',
+            animationTimingFunction: 'cubic-bezier(0.8,0,1,1)',
+          },
+          '50%': {
+            transform: 'none',
+            animationTimingFunction: 'cubic-bezier(0,0,0.2,1)',
           },
         },
       },
