@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 
 
-def process_pptx(file_path):
+def process_slide(file_path):
     try:
         pdf_io = convert_to_pdf(file_path)
         base_name = os.path.basename(file_path).rsplit(".", 1)[0]
