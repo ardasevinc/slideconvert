@@ -24,7 +24,6 @@ export function FileUploadComponent({
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
       if (acceptedFiles.length > 0) {
         setSelectedFile(acceptedFiles[0]);
-        onFilesAccepted(acceptedFiles);
       }
       if (rejectedFiles.length > 0) {
         rejectedFiles.forEach(({ file }) => {
@@ -38,41 +37,40 @@ export function FileUploadComponent({
         });
       }
     },
-    [onFilesAccepted, maxSize],
+    [maxSize],
   );
 
   return (
     <div className='w-full max-w-2xl'>
-      <Dropzone
-        onDrop={onDrop}
-        accept={{
-          'application/vnd.ms-powerpoint': ['.ppt'],
-          'application/vnd.openxmlformats-officedocument.presentationml.presentation':
-            ['.pptx'],
-        }}
-        maxSize={maxSize}
-        maxFiles={1}
-        multiple={false}
-        disabled={disabled || !!selectedFile}
-      >
-        {({ getRootProps, getInputProps, isDragActive, isDragReject }) => (
-          <div
-            {...getRootProps()}
-            className={cn(
-              'group flex flex-col items-center justify-center h-52 w-full rounded-lg border-2 border-dashed px-5 py-6 text-center cursor-pointer transition',
-              isDragActive
-                ? 'border-primary bg-white/5'
-                : isDragReject
-                  ? 'border-destructive bg-destructive/5'
-                  : 'border-muted-foreground/25 hover:bg-white/5',
-              disabled && 'pointer-events-none opacity-60',
-              selectedFile && 'pointer-events-none',
-            )}
-          >
-            <input {...getInputProps()} />
+      {!selectedFile ? (
+        <Dropzone
+          onDrop={onDrop}
+          accept={{
+            'application/vnd.ms-powerpoint': ['.ppt'],
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+              ['.pptx'],
+          }}
+          maxSize={maxSize}
+          maxFiles={1}
+          multiple={false}
+          disabled={disabled}
+        >
+          {({ getRootProps, getInputProps, isDragActive, isDragReject }) => (
+            <div
+              {...getRootProps()}
+              className={cn(
+                'group flex flex-col items-center justify-center h-56 w-full rounded-lg border-2 border-dashed px-8 py-10 text-center cursor-pointer transition',
+                isDragActive
+                  ? 'border-primary bg-white/5'
+                  : isDragReject
+                    ? 'border-destructive bg-destructive/5'
+                    : 'border-muted-foreground/25 hover:bg-white/5',
+                disabled && 'pointer-events-none opacity-60',
+              )}
+            >
+              <input {...getInputProps()} />
 
-            {!selectedFile ? (
-              <div className='flex flex-col items-center gap-4'>
+              <div className='flex flex-col items-center gap-6'>
                 <div
                   className={cn(
                     'rounded-full p-4 bg-white/5',
@@ -81,7 +79,7 @@ export function FileUploadComponent({
                 >
                   <UploadIcon />
                 </div>
-                <div className='flex flex-col gap-1'>
+                <div className='flex flex-col gap-2'>
                   <p className='font-medium'>
                     {isDragActive
                       ? isDragReject
@@ -89,55 +87,66 @@ export function FileUploadComponent({
                         : 'Drop your file here'
                       : 'Drag and drop a PowerPoint file to convert to PDF'}
                   </p>
-                  <p className='text-sm text-muted-foreground'>
+                  <p className='text-sm text-muted-foreground text-center'>
                     {isDragReject ? 'Use .ppt or .pptx files only' : 'or'}
                   </p>
                 </div>
-                <Button variant='outline' className='mt-2'>
+                <Button variant='outline' className='mt-1'>
                   Choose file
                 </Button>
-                <p className='text-xs text-muted-foreground mt-2'>
+                <p className='text-xs text-muted-foreground'>
                   Supports .ppt, .pptx files up to {formatBytes(maxSize)}
                 </p>
               </div>
-            ) : (
-              <div className='w-full'>
-                <div className='bg-white/5 rounded-lg p-4 mb-4'>
-                  <div className='flex items-center justify-between'>
-                    <div className='text-lg font-medium'>
-                      {selectedFile.name}
-                    </div>
-                    <div className='text-sm text-muted-foreground'>
-                      {formatBytes(selectedFile.size)}
-                    </div>
-                  </div>
-                </div>
-                <div className='flex justify-between gap-4'>
-                  <Button
-                    variant='outline'
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedFile(null);
-                    }}
-                    className='flex-1'
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onFilesAccepted([selectedFile]);
-                    }}
-                    className='flex-1'
-                  >
-                    Convert
-                  </Button>
-                </div>
-              </div>
-            )}
+            </div>
+          )}
+        </Dropzone>
+      ) : (
+        <div className='w-full p-6 bg-white/[0.01] rounded-lg border border-muted-foreground/10'>
+          {/* File info card */}
+          <div className='w-full border border-gray-200/20 rounded-lg p-6 text-center mb-3 bg-white/[0.02]'>
+            <h3 className='text-base font-medium'>{selectedFile.name}</h3>
+            <p className='text-sm text-muted-foreground mt-1'>
+              {formatBytes(selectedFile.size)}
+            </p>
           </div>
-        )}
-      </Dropzone>
+
+          {/* Convert option card */}
+          <div
+            className='w-full border border-blue-500/30 rounded-lg bg-blue-500/[0.03] p-4 mb-4 cursor-pointer hover:bg-blue-500/[0.05] transition-colors'
+            onClick={() => onFilesAccepted([selectedFile])}
+          >
+            <div className='flex items-center gap-3'>
+              <div className='flex-shrink-0 rounded-full bg-blue-500/10 flex items-center justify-center w-6 h-6'>
+                <div className='w-3 h-3 rounded-full bg-blue-500'></div>
+              </div>
+              <div>
+                <p className='text-base font-medium'>Convert to PDF</p>
+                <p className='text-sm text-muted-foreground'>
+                  Best quality, retains images and other assets.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className='flex gap-3'>
+            <Button
+              variant='outline'
+              onClick={() => setSelectedFile(null)}
+              className='flex-1 font-normal border-gray-200/20'
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => onFilesAccepted([selectedFile])}
+              className='flex-1 bg-blue-600 hover:bg-blue-700 font-medium'
+            >
+              Convert
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
