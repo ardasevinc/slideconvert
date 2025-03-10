@@ -1,4 +1,5 @@
 import boto3
+from botocore.config import Config
 from app.config.env import R2_ENDPOINT_URL, R2_ACCESS_KEY, R2_SECRET_KEY, R2_BUCKET_NAME
 
 s3_client = boto3.client(
@@ -6,6 +7,7 @@ s3_client = boto3.client(
     endpoint_url=R2_ENDPOINT_URL,
     aws_access_key_id=R2_ACCESS_KEY,
     aws_secret_access_key=R2_SECRET_KEY,
+    config=Config(signature_version="s3v4"),
 )
 
 
