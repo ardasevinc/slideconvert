@@ -1,4 +1,4 @@
-from utils.unoserver import convert_to_pdf
+from utils.unoserver import convert_file_with_unoserver
 from utils.r2 import upload_to_r2, generate_presigned_url
 import os
 from datetime import datetime
@@ -6,7 +6,11 @@ from datetime import datetime
 
 def process_slide(file_path):
     try:
-        pdf_io = convert_to_pdf(file_path)
+        # file_ext = os.path.splitext(file_path)[1].lower().lstrip(".")
+
+        # Call convert_file_with_unoserver with the file path and target format
+        pdf_io = convert_file_with_unoserver(file_path, "pdf")
+
         base_name = os.path.basename(file_path).rsplit(".", 1)[0]
         # Create a date-based prefix (e.g., conversions/2025/03/09/)
         date_prefix = datetime.now().strftime("conversions/%Y/%m/%d")

@@ -11,7 +11,7 @@ import os
 router = APIRouter()
 
 # Set up Redis connection using configuration settings
-redis_conn = Redis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD)
+redis_conn = Redis(host=REDIS_HOST, port=int(REDIS_PORT), password=REDIS_PASSWORD)
 
 # Create a queue for background tasks
 q = Queue(connection=redis_conn)
@@ -32,11 +32,11 @@ async def convert_slide(file: UploadFile = File(...)):
     - Returns a job ID for status tracking.
     """
     # Check if the file has a valid extension
-    if not file.filename.lower().endswith((".ppt", ".pptx")):
+    if not file.filename or not file.filename.lower().endswith((".ppt", ".pptx")):
         raise HTTPException(status_code=400, detail="only .ppt or .pptx files allowed")
 
     # Preserve the original file extension
-    file_ext = os.path.splitext(file.filename)[1]
+    file_ext = os.path.splitext(file.filename)[1] if file.filename else ""
 
     # Generate a unique file path for temporary storage
     file_path = f"/tmp/{uuid4()}{file_ext}"
@@ -61,6 +61,10 @@ async def get_status(job_id: str):
     """
     # Fetch the job from the queue using the job ID
     job = q.fetch_job(job_id)
+
+    # If job doesn't exist, return not found
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
 
     # Check job status and respond accordingly
     if job.is_finished:

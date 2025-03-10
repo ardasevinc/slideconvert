@@ -1,5 +1,6 @@
 import aiohttp
 import io
+import os
 from fastapi import HTTPException
 from app.config.env import UNOSERVER_URL
 from urllib.parse import urljoin
@@ -8,14 +9,13 @@ ENDPOINT = "/request"
 
 
 async def convert_file_with_unoserver(
-    file: bytes, filename: str, convert_to: str, opts: list[str] | None = None
+    file_path: str, convert_to: str, opts: list[str] | None = None
 ) -> io.BytesIO:
     """
     Sends a file to unoserver for conversion and returns the result as a BytesIO object.
 
     Args:
-        file: The file content in bytes.
-        filename: The original filename for the form data.
+        file_path: Path to the file to be converted.
         convert_to: The target format (e.g., "pdf").
         opts: Optional list of conversion options.
 
@@ -28,7 +28,15 @@ async def convert_file_with_unoserver(
     async with aiohttp.ClientSession() as session:
         # Build the multipart form data
         form = aiohttp.FormData()
-        form.add_field("file", file, filename=filename)
+
+        # Get the filename from the path
+        filename = os.path.basename(file_path)
+
+        # Add the file from the path
+        with open(file_path, "rb") as f:
+            file_data = f.read()
+
+        form.add_field("file", file_data, filename=filename)
         form.add_field("convert-to", convert_to)
         if opts:
             for opt in opts:
