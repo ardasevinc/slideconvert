@@ -10,5 +10,7 @@ COPY ./apps/slideconvert-backend/ /app
 WORKDIR /app
 RUN uv sync --frozen --no-cache
 
+ENV REDIS_URL=${REDIS_URL}
+
 # Run the application.
-CMD ["/app/.venv/bin/fastapi", "run", "app/main.py", "--port", "80", "--host", "0.0.0.0"]
+CMD ["/bin/sh", "-c", "/app/.venv/bin/fastapi run app/main.py --port 80 --host 0.0.0.0 & /app/.venv/bin/rq worker --url $REDIS_URL"]
