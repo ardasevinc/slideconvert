@@ -5,4 +5,6 @@ COPY ./apps/slideconvert-backend/ /app
 WORKDIR /app
 RUN uv sync --frozen --no-cache
 
-CMD ["/app/.venv/bin/rq", "worker", "--url", "$REDIS_URL"]
+ENV REDIS_URL=${REDIS_URL}
+
+CMD /bin/sh -c "echo 'REDIS_URL is: $REDIS_URL' && /app/.venv/bin/rq worker --url '$REDIS_URL'"
