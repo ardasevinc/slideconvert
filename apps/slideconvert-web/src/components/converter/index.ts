@@ -1,4 +1,3 @@
-export * from './file-dropzone';
 export * from './converter-section';
 export * from './file-upload';
 export * from './conversion-progress';
