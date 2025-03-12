@@ -10,11 +10,15 @@ if IS_DEVELOPMENT:
         "http://localhost:3000",
         "http://127.0.0.1",
         "http://127.0.0.1:3000",
+        "https://slideconvert-web.vercel.app",
+        "https://www.slideconvert-web.vercel.app",
     ]
 else:
     origins = [
         "https://slideconvert-web.ardasevinc.xyz",
         "https://www.slideconvert-web.ardasevinc.xyz",
+        "https://slideconvert-web.vercel.app",
+        "https://www.slideconvert-web.vercel.app",
     ]
 
 
