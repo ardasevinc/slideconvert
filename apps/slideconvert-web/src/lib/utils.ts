@@ -12,7 +12,7 @@ export function formatBytes(
     sizeType?: 'accurate' | 'normal';
   } = {},
 ) {
-  const { decimals = 0, sizeType = 'normal' } = opts;
+  const { decimals = 1, sizeType = 'normal' } = opts;
 
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const accurateSizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB'];
